@@ -61,6 +61,9 @@ total_mape = 0
 total_M = 0
 total_N = 0
 reconstructed = []
+perc = np.percentile(np.sort(np.diff(record_1[0, :])), q=95)
+print("PERCENTILE:", perc)
+#perc = 0.2
 for batch_i in range(0, measures, N):
     if batch_i+N > 5000:
         break
@@ -70,16 +73,15 @@ for batch_i in range(0, measures, N):
     slice_ = record_1[0, batch_i:batch_i+N].copy()
     min_1 = slice_.min()
     max_1 = slice_.max()
-    if abs(min_1 - max_1) > 1.:
+    if abs(min_1 - max_1) > perc:
         print(max_1, min_1)
-        currM = N // 2
-        print("UES")
+        currM = N
     else:
         currM = M
     total_M += currM
     total_N += N
-    if not np.allclose([max_1 - min_1], [0]):
-        slice_ = (slice_ - min_1) / (max_1 - min_1)
+    #if not np.allclose([max_1 - min_1], [0]):
+        #slice_ = (slice_ - min_1) / (max_1 - min_1)
     numbers = numbers_array(*list(slice_))
     cheb = chebyshev_array(*chebyshev_matrix)
     start = datetime.now()
@@ -90,9 +92,9 @@ for batch_i in range(0, measures, N):
         indeces.append(res[i])
     indeces = np.array(indeces)
     #indeces = indeces * (max_ - min_) + min_
-    indeces = indeces * (max_1 - min_1) + min_1
+    #indeces = indeces * (max_1 - min_1) + min_1
     reconstructed.extend(indeces)
-    print("Batch", batch_i // 32, "MAPE:", mape_res := mape(y_true=record_1[0, batch_i:batch_i+N], y_pred=indeces), "MSE:", mse_res := mse(y_true=record_1[0, batch_i:batch_i+N], y_pred=indeces))
+    print("Batch", batch_i // N, "MAPE:", mape_res := mape(y_true=record_1[0, batch_i:batch_i+N], y_pred=indeces), "MSE:", mse_res := mse(y_true=record_1[0, batch_i:batch_i+N], y_pred=indeces))
     #if mape_res >= 20:
         #deviants.append({"original": record_1[0, batch_i:batch_i+N], "restored": indeces})
         #fig, ax = plt.subplots()
